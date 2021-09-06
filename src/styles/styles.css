@@ -1,0 +1,42 @@
+.login-container{
+  height: 100vh;
+  background-image: url('../assets/login_bg.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.login{
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+.home {
+  min-height: 100vh;
+  background: rgb(77,86,135);
+  background: linear-gradient(56deg, rgba(77,86,135,1) 0%, rgba(176,98,114,1) 100%);
+}
+.task {
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  /* justify-content: space-between; */
+  gap: 3rem;
+  background-color: #c9c9c9;
+  color: white;
+  font-weight: 600;
+  border: 1px solid rgb(37, 36, 36);
+  list-style: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  margin-block-start: 5px;
+}
+.task-id{
+  display: flex;
+  color: white;
+  align-self: center;
+  float:right;
+}
+.task-title{
+  margin: 0;
+  align-self: center;
+}
