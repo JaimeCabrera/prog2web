@@ -1,12 +1,66 @@
 <template>
   <div class="home">
+    <nav class="navbar navbar-light bg-light shadow-sm">
+      <div class="container">
+        <a class="navbar-brand d-flex  text-center text-black-50">
+          <i class="fab fa-buffer fa-2x"></i>
+          <p class="mt-1 mx-2 fw-bold">Organizador de Tareas</p>
+        </a>
+        <div class="d-flex ">
+          <span class="mt-2 mx-3 text-primary"> {{ user.username }}</span>
+          <button class="btn btn-outline-secondary mt-1" @click="logout">
+            Cerrar Sesion
+          </button>
+        </div>
+      </div>
+    </nav>
     <div class="container">
-      {{ user }}
-      <div class="row">
-        <div class="col-8 mx-auto mt-3">
-          <h1 class="text-center text-light">Lista de tareas por hacer</h1>
-          <hr />
-          <form action="" v-on:submit.prevent="addTask">
+      <div class="row shadow-sm mt-3">
+        <div class="col-4  categories d-flex flex-column">
+          <a
+            class="btn btn-secondary mx-auto mt-3"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top"
+            title="Agregar Categoria"
+          >
+            <i class="fas fa-plus"></i>
+          </a>
+          <br />
+          <br />
+          <div class="list-group" v-if="categories">
+            <a
+              href="#"
+              class="list-group-item list-group-item-action "
+              aria-current="true"
+            >
+              The current link item
+            </a>
+            <a href="#" class="list-group-item list-group-item-action"
+              >A second link item</a
+            >
+            <a href="#" class="list-group-item list-group-item-action"
+              >A third link item</a
+            >
+            <a href="#" class="list-group-item list-group-item-action"
+              >A fourth link item</a
+            >
+            <a
+              href="#"
+              class="list-group-item list-group-item-action disabled"
+              tabindex="-1"
+              aria-disabled="true"
+              >A disabled link item</a
+            >
+          </div>
+          <div v-else>
+            <span class="text-secondary"
+              >Aun no tienes ninguna categoria, por favor crea una</span
+            >
+          </div>
+          <!-- <h1 class="text-center text-light">Lista de tareas por hacer</h1>
+          <hr /> -->
+
+          <!-- <form action="" v-on:submit.prevent="addTask">
             <div class="input-group mb-3">
               <input
                 type="text"
@@ -21,8 +75,8 @@
                 Agregar Tarea
               </button>
             </div>
-          </form>
-          <div class="col-12">
+          </form> -->
+          <!-- <div class="col-12">
             <ul>
               <li class="task" v-for="(task, index) in tasks" :key="index">
                 <div class="">
@@ -42,7 +96,17 @@
                 >
               </li>
             </ul>
-          </div>
+          </div> -->
+        </div>
+        <div class="col-8 tasks">
+          <a
+            class="btn btn-outline-primary float-end mt-3"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top"
+            title="Agregar Tarea"
+          >
+            <i class="fas fa-plus"></i>
+          </a>
         </div>
       </div>
     </div>
@@ -51,21 +115,20 @@
 
 <script>
 import axios from "axios";
-import Swal from "sweetalert2";
+// import Swal from "sweetalert2";
 export default {
   data() {
     return {
       task: { title: "" },
-      tasks: [],
+      categories: [],
       user: {},
+      userId: "",
     };
   },
   created() {
     this.verifyAuth();
   },
-  mounted() {
-    this.getAllTasks();
-  },
+  mounted() {},
   methods: {
     verifyAuth() {
       axios
@@ -73,64 +136,82 @@ export default {
           headers: { "x-access-token": localStorage.getItem("token") },
         })
         .then((res) => {
-          // console.log(res);
           this.user = res.data;
+          this.userId = res.data.id;
+          this.getAllCategories(this.userId);
+
           // if (!res) {
           //   this.$router.replace("/");
           // }
         })
         .catch((err) => {
           console.log(err);
+
           this.$router.replace("/");
         });
     },
-    addTask() {
-      axios
-        .post("http://localhost:3000/tasks", this.task)
-        .then((res) => {
-          if (res.status == 200) {
-            this.tasks.push(res.data);
-            this.task = { title: "" };
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+    logout() {
+      localStorage.clear();
+      this.$router.replace("/");
     },
-    getAllTasks() {
+    getAllCategories(id) {
+      // const userId = this.user.id;
       axios
-        .get("http://localhost:3000/tasks", {
-          headers: {
-            "Content-type": "application/json",
-          },
+        .get(`http://localhost:3000/api/categories/all/${id}`, {
+          headers: { "x-access-token": localStorage.getItem("token") },
         })
         .then((res) => {
-          console.log(res.data);
-          this.tasks = res.data;
-        })
-        .catch((err) => {
-          console.log(err);
+          console.log(res);
+          this.categories = res.data;
         });
     },
-    deleteTask(task, id) {
-      axios
-        .delete(`http://localhost:3000/tasks/${id}`)
-        .then((res) => {
-          if (res.status == 200) {
-            Swal.fire({
-              position: "top-end",
-              icon: "success",
-              title: `${task.title}, Se eliminó correctamente.`,
-              showConfirmButton: false,
-              timer: 1500,
-            });
-            this.tasks = this.tasks.filter((task) => task.id !== id);
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    },
+    // addTask() {
+    //   axios
+    //     .post("http://localhost:3000/tasks", this.task)
+    //     .then((res) => {
+    //       if (res.status == 200) {
+    //         this.tasks.push(res.data);
+    //         this.task = { title: "" };
+    //       }
+    //     })
+    //     .catch((err) => {
+    //       console.log(err);
+    //     });
+    // },
+    // getAllTasks() {
+    //   axios
+    //     .get("http://localhost:3000/tasks", {
+    //       headers: {
+    //         "Content-type": "application/json",
+    //       },
+    //     })
+    //     .then((res) => {
+    //       console.log(res.data);
+    //       this.tasks = res.data;
+    //     })
+    //     .catch((err) => {
+    //       console.log(err);
+    //     });
+    // },
+    // deleteTask(task, id) {
+    //   axios
+    //     .delete(`http://localhost:3000/tasks/${id}`)
+    //     .then((res) => {
+    //       if (res.status == 200) {
+    //         Swal.fire({
+    //           position: "top-end",
+    //           icon: "success",
+    //           title: `${task.title}, Se eliminó correctamente.`,
+    //           showConfirmButton: false,
+    //           timer: 1500,
+    //         });
+    //         this.tasks = this.tasks.filter((task) => task.id !== id);
+    //       }
+    //     })
+    //     .catch((err) => {
+    //       console.log(err);
+    //     });
+    // },
   },
 };
 </script>

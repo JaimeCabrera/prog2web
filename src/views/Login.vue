@@ -63,7 +63,6 @@ export default {
         .post("http://localhost:3000/api/auth/signin", this.user)
         .then((res) => {
           if (res.status == 200) {
-            console.log(res);
             localStorage.setItem("token", res.data.accessToken);
             this.$router.replace("/home");
           }
