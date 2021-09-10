@@ -1,9 +1,10 @@
 <template>
   <div class="home">
     <div class="container">
+      {{ user }}
       <div class="row">
-        <div class="col-8 mx-auto mt-5">
-          <h4 class="text-center">Lista de tareas por hacer</h4>
+        <div class="col-8 mx-auto mt-3">
+          <h1 class="text-center text-light">Lista de tareas por hacer</h1>
           <hr />
           <form action="" v-on:submit.prevent="addTask">
             <div class="input-group mb-3">
@@ -16,8 +17,8 @@
                 aria-describedby="button-addon1"
                 autofocus
               />
-              <button class="btn btn-success" type="submit" id="button-addon1">
-                Agregar
+              <button class="btn btn-primary" type="submit" id="button-addon1">
+                Agregar Tarea
               </button>
             </div>
           </form>
@@ -34,7 +35,9 @@
                   />
                 </div>
                 <p class="task-title">{{ task.title }}</p>
-                <a v-on:click="deleteTask(task.id)" class="nav-link float-left"
+                <a
+                  v-on:click="deleteTask(task, task.id)"
+                  class="nav-link float-left text-danger"
                   >Eliminar</a
                 >
               </li>
@@ -48,17 +51,39 @@
 
 <script>
 import axios from "axios";
+import Swal from "sweetalert2";
 export default {
   data() {
     return {
       task: { title: "" },
       tasks: [],
+      user: {},
     };
+  },
+  created() {
+    this.verifyAuth();
   },
   mounted() {
     this.getAllTasks();
   },
   methods: {
+    verifyAuth() {
+      axios
+        .get("http://localhost:3000/api/auth/user", {
+          headers: { "x-access-token": localStorage.getItem("token") },
+        })
+        .then((res) => {
+          // console.log(res);
+          this.user = res.data;
+          // if (!res) {
+          //   this.$router.replace("/");
+          // }
+        })
+        .catch((err) => {
+          console.log(err);
+          this.$router.replace("/");
+        });
+    },
     addTask() {
       axios
         .post("http://localhost:3000/tasks", this.task)
@@ -80,17 +105,25 @@ export default {
           },
         })
         .then((res) => {
+          console.log(res.data);
           this.tasks = res.data;
         })
         .catch((err) => {
           console.log(err);
         });
     },
-    deleteTask(id) {
+    deleteTask(task, id) {
       axios
         .delete(`http://localhost:3000/tasks/${id}`)
         .then((res) => {
           if (res.status == 200) {
+            Swal.fire({
+              position: "top-end",
+              icon: "success",
+              title: `${task.title}, Se eliminó correctamente.`,
+              showConfirmButton: false,
+              timer: 1500,
+            });
             this.tasks = this.tasks.filter((task) => task.id !== id);
           }
         })
