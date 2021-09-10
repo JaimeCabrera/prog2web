@@ -17,7 +17,7 @@
     <div class="container">
       <div class="row shadow-sm mt-3">
         <div class="col-4  categories d-flex flex-column">
-          <form class="mt-3">
+          <form class="mt-3" @submit.prevent="addCategory">
             <div class="">
               <input
                 type="text"
@@ -34,74 +34,43 @@
                 Agregar Tarea
               </button> -->
             </div>
-            <a
+            <button
+              type="submit"
               class="btn btn-secondary mx-auto mt-2 btn-sm"
               data-bs-toggle="tooltip"
               data-bs-placement="top"
-              @click="addCategory"
               title="Agregar Categoria"
             >
               <i class="fas fa-plus"></i>
-            </a>
+            </button>
           </form>
-
+          <br />
+          <h6 class="mx-2 text-success">Categorias</h6>
           <div
-            class="list-group list-group-flush  mt-4"
+            class="list-group  mt-1 mb-4 scroll"
             v-if="categories.length > 0"
           >
             <a
               href="#"
               v-for="(category, index) in categories"
               :key="index"
+              @click="getTasks(category)"
               class="list-group-item list-group-item-action"
-              >{{ category.name }}</a
-            >
+              >{{ category.name }}
+              <button
+                type="button"
+                class="btn-close float-end text-black-50"
+                aria-label="Close"
+                @click="deleteCategory(category)"
+                title="Eliminar Categoria"
+              ></button>
+            </a>
           </div>
           <div v-else>
             <span class="text-secondary"
               >Crea una categoria para agregar tareas</span
             >
           </div>
-          <!-- <h1 class="text-center text-light">Lista de tareas por hacer</h1>
-          <hr /> -->
-
-          <!-- <form action="" v-on:submit.prevent="addTask">
-            <div class="input-group mb-3">
-              <input
-                type="text"
-                v-model="task.title"
-                class="form-control"
-                placeholder="Escribe el nombre de la tarea"
-                aria-label="Example text with button addon"
-                aria-describedby="button-addon1"
-                autofocus
-              />
-              <button class="btn btn-primary" type="submit" id="button-addon1">
-                Agregar Tarea
-              </button>
-            </div>
-          </form> -->
-          <!-- <div class="col-12">
-            <ul>
-              <li class="task" v-for="(task, index) in tasks" :key="index">
-                <div class="">
-                  <input
-                    class="form-check-input task-id"
-                    type="checkbox"
-                    id="checkboxNoLabel"
-                    value=""
-                    aria-label=""
-                  />
-                </div>
-                <p class="task-title">{{ task.title }}</p>
-                <a
-                  v-on:click="deleteTask(task, task.id)"
-                  class="nav-link float-left text-danger"
-                  >Eliminar</a
-                >
-              </li>
-            </ul>
-          </div> -->
         </div>
         <div class="col-8 tasks">
           <a
@@ -115,12 +84,19 @@
           <div class="p-2 mt-3">
             <h6 class="text-black-50">Lista de tareas</h6>
             <hr />
-            <div class="card mt-2">
-              <ul class="list-group list-group-flush">
-                <li class="list-group-item">An item</li>
-                <li class="list-group-item">A second item</li>
-                <li class="list-group-item">A third item</li>
+            <div v-if="tasks.length > 0" class="card mt-2 ">
+              <ul class="list-group list-group-flush scroll">
+                <li
+                  v-for="(task, index) in tasks"
+                  :key="index"
+                  class="list-group-item"
+                >
+                  {{ task.name }}
+                </li>
               </ul>
+            </div>
+            <div v-else>
+              Lista vacia.
             </div>
           </div>
         </div>
@@ -136,12 +112,14 @@ export default {
   data() {
     return {
       task: { title: "" },
+      tasks: [],
       categories: [],
       category: { name: "" },
       user: {},
       userId: "",
       error: "",
       token: "",
+      editedCategory: null,
     };
   },
   created() {
@@ -179,7 +157,6 @@ export default {
     },
     getAllCategories(id) {
       // const userId = this.user.id;
-      console.log(id);
       axios
         .get(
           "http://localhost:3000/api/categories",
@@ -219,53 +196,44 @@ export default {
           this.error = err.response.data;
         });
     },
-    // addTask() {
-    //   axios
-    //     .post("http://localhost:3000/tasks", this.task)
-    //     .then((res) => {
-    //       if (res.status == 200) {
-    //         this.tasks.push(res.data);
-    //         this.task = { title: "" };
-    //       }
-    //     })
-    //     .catch((err) => {
-    //       console.log(err);
-    //     });
-    // },
-    // getAllTasks() {
-    //   axios
-    //     .get("http://localhost:3000/tasks", {
-    //       headers: {
-    //         "Content-type": "application/json",
-    //       },
-    //     })
-    //     .then((res) => {
-    //       console.log(res.data);
-    //       this.tasks = res.data;
-    //     })
-    //     .catch((err) => {
-    //       console.log(err);
-    //     });
-    // },
-    // deleteTask(task, id) {
-    //   axios
-    //     .delete(`http://localhost:3000/tasks/${id}`)
-    //     .then((res) => {
-    //       if (res.status == 200) {
-    //         Swal.fire({
-    //           position: "top-end",
-    //           icon: "success",
-    //           title: `${task.title}, Se eliminó correctamente.`,
-    //           showConfirmButton: false,
-    //           timer: 1500,
-    //         });
-    //         this.tasks = this.tasks.filter((task) => task.id !== id);
-    //       }
-    //     })
-    //     .catch((err) => {
-    //       console.log(err);
-    //     });
-    // },
+
+    deleteCategory(category) {
+      const { id } = category;
+      axios
+        .delete(`http://localhost:3000/api/categories/${id}`, {
+          headers: { "x-access-token": this.token },
+        })
+        .then((res) => {
+          if (res) {
+            Swal.fire({
+              position: "bottom-end",
+              icon: "success",
+              title: "Categoria Eliminada",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+            this.categories = this.categories.filter((cat) => cat.id !== id);
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    },
+    getTasks(category) {
+      // this.tasks = [];
+      const { id: categoryId } = category;
+      console.log("esta categoriua va", categoryId);
+      axios
+        .get(`http://localhost:3000/api/tasks/${categoryId}`, {
+          headers: { "x-access-token": this.token },
+        })
+        .then((res) => {
+          this.tasks = res.data.tasks;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    },
   },
 };
 </script>

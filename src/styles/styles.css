@@ -59,3 +59,8 @@
 .tasks{
   background-color: #dee1e4;
 }
+.scroll {
+  height:70vh;
+
+  overflow-y: scroll;
+}
