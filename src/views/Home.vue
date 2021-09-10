@@ -2,7 +2,7 @@
   <div class="home">
     <nav class="navbar navbar-light bg-light shadow-sm">
       <div class="container">
-        <a class="navbar-brand d-flex  text-center text-black-50">
+        <a class="navbar-brand d-flex  text-center text-primary">
           <i class="fab fa-buffer fa-2x"></i>
           <p class="mt-1 mx-2 fw-bold">Organizador de Tareas</p>
         </a>
@@ -17,44 +17,49 @@
     <div class="container">
       <div class="row shadow-sm mt-3">
         <div class="col-4  categories d-flex flex-column">
-          <a
-            class="btn btn-secondary mx-auto mt-3"
-            data-bs-toggle="tooltip"
-            data-bs-placement="top"
-            title="Agregar Categoria"
-          >
-            <i class="fas fa-plus"></i>
-          </a>
-          <br />
-          <br />
-          <div class="list-group" v-if="categories">
+          <form class="mt-3">
+            <div class="">
+              <input
+                type="text"
+                v-model="category.name"
+                id="name"
+                class="form-control form-control-sm"
+                :class="error ? `is-invalid` : ``"
+                autofocus
+              />
+              <div v-show="error" id="name" class="invalid-feedback">
+                {{ error.message }}
+              </div>
+              <!-- <button class="btn btn-primary" type="submit" id="button-addon1">
+                Agregar Tarea
+              </button> -->
+            </div>
             <a
-              href="#"
-              class="list-group-item list-group-item-action "
-              aria-current="true"
+              class="btn btn-secondary mx-auto mt-2 btn-sm"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              @click="addCategory"
+              title="Agregar Categoria"
             >
-              The current link item
+              <i class="fas fa-plus"></i>
             </a>
-            <a href="#" class="list-group-item list-group-item-action"
-              >A second link item</a
-            >
-            <a href="#" class="list-group-item list-group-item-action"
-              >A third link item</a
-            >
-            <a href="#" class="list-group-item list-group-item-action"
-              >A fourth link item</a
-            >
+          </form>
+
+          <div
+            class="list-group list-group-flush  mt-4"
+            v-if="categories.length > 0"
+          >
             <a
               href="#"
-              class="list-group-item list-group-item-action disabled"
-              tabindex="-1"
-              aria-disabled="true"
-              >A disabled link item</a
+              v-for="(category, index) in categories"
+              :key="index"
+              class="list-group-item list-group-item-action"
+              >{{ category.name }}</a
             >
           </div>
           <div v-else>
             <span class="text-secondary"
-              >Aun no tienes ninguna categoria, por favor crea una</span
+              >Crea una categoria para agregar tareas</span
             >
           </div>
           <!-- <h1 class="text-center text-light">Lista de tareas por hacer</h1>
@@ -100,13 +105,24 @@
         </div>
         <div class="col-8 tasks">
           <a
-            class="btn btn-outline-primary float-end mt-3"
+            class="btn btn-primary float-end mt-3 btn-sm"
             data-bs-toggle="tooltip"
             data-bs-placement="top"
             title="Agregar Tarea"
           >
             <i class="fas fa-plus"></i>
           </a>
+          <div class="p-2 mt-3">
+            <h6 class="text-black-50">Lista de tareas</h6>
+            <hr />
+            <div class="card mt-2">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item">An item</li>
+                <li class="list-group-item">A second item</li>
+                <li class="list-group-item">A third item</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -115,21 +131,28 @@
 
 <script>
 import axios from "axios";
-// import Swal from "sweetalert2";
+import Swal from "sweetalert2";
 export default {
   data() {
     return {
       task: { title: "" },
       categories: [],
+      category: { name: "" },
       user: {},
       userId: "",
+      error: "",
+      token: "",
     };
   },
   created() {
     this.verifyAuth();
+    this.getToken();
   },
   mounted() {},
   methods: {
+    getToken() {
+      return (this.token = localStorage.getItem("token"));
+    },
     verifyAuth() {
       axios
         .get("http://localhost:3000/api/auth/user", {
@@ -156,13 +179,44 @@ export default {
     },
     getAllCategories(id) {
       // const userId = this.user.id;
+      console.log(id);
       axios
-        .get(`http://localhost:3000/api/categories/all/${id}`, {
-          headers: { "x-access-token": localStorage.getItem("token") },
+        .get(
+          "http://localhost:3000/api/categories",
+
+          {
+            data: {
+              userId: id,
+            },
+            headers: { "x-access-token": this.token },
+          }
+        )
+        .then((res) => {
+          this.categories = res.data;
+        });
+    },
+    addCategory() {
+      this.error = "";
+      axios
+        .post("http://localhost:3000/api/categories", this.category, {
+          headers: { "x-access-token": this.token },
+          data: {
+            userId: this.userId,
+          },
         })
         .then((res) => {
-          console.log(res);
-          this.categories = res.data;
+          Swal.fire({
+            position: "bottom-end",
+            icon: "success",
+            title: "Categoria Agregada",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+          this.categories.push(res.data);
+          this.category = { name: "" };
+        })
+        .catch((err) => {
+          this.error = err.response.data;
         });
     },
     // addTask() {
