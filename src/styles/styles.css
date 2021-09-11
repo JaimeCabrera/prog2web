@@ -43,7 +43,7 @@
   /* border: 1px solid rgb(136, 136, 136,0.3); */
 
   min-height: 100vh;
-  background-color: #d9d9da;
+  background-color: #d6d6d6;
   /* background-image: url('../assets/bg_4.jpg'); */
   /* background: rgb(77,86,135);
   background: linear-gradient(56deg, rgba(77,86,135,1) 0%, rgba(176,98,114,1) 100%); */
@@ -54,13 +54,23 @@
 .categories {
   border-radius: 5px;
   background-color: #eee;
+  max-height: 85vh;
   min-height: 85vh;
 }
 .tasks{
   background-color: #dee1e4;
+
 }
-.scroll {
-  height:70vh;
+
+.scroll-categories {
+  max-height: 65vh;
+
+  overflow-y: scroll;
+}
+.scroll-tasks{
+  height:76vh;
+
+  /* background-color: rgb(177, 176, 176); */
 
   overflow-y: scroll;
 }

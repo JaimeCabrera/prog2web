@@ -20,6 +20,12 @@ export default new VueRouter({
     {
       path: "/home",
       component: Home,
+      children: [
+        {
+          name: "category-details",
+          path: "/home/category/show/:name",
+        },
+      ],
     },
   ],
 });

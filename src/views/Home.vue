@@ -2,10 +2,14 @@
   <div class="home">
     <nav class="navbar navbar-light bg-light shadow-sm">
       <div class="container">
-        <a class="navbar-brand d-flex  text-center text-primary">
+        <router-link
+          to="/home"
+          @click.native="categoryId = ''"
+          class="navbar-brand d-flex  text-center text-primary"
+        >
           <i class="fab fa-buffer fa-2x"></i>
           <p class="mt-1 mx-2 fw-bold">Organizador de Tareas</p>
-        </a>
+        </router-link>
         <div class="d-flex ">
           <span class="mt-2 mx-3 text-primary"> {{ user.username }}</span>
           <button class="btn btn-outline-secondary mt-1" @click="logout">
@@ -49,14 +53,17 @@
           <br />
           <h6 class="mx-2 text-success">Categorias</h6>
           <div
-            class="list-group  mt-1 mb-4 scroll"
+            class="list-group  mt-1 mb-4 scroll-categories"
             v-if="categories.length > 0"
           >
-            <a
-              href="#"
+            <router-link
+              :to="{
+                name: 'category-details',
+                params: { name: category.name },
+              }"
               v-for="(category, index) in categories"
               :key="index"
-              @click="getTasks(category)"
+              @click.native="getTasks(category)"
               class="list-group-item list-group-item-action"
               >{{ category.name }}
               <button
@@ -66,7 +73,7 @@
                 @click="deleteCategory(category)"
                 title="Eliminar Categoria"
               ></button>
-            </a>
+            </router-link>
           </div>
           <div v-else>
             <span class="text-secondary"
@@ -85,30 +92,25 @@
             <i class="fas fa-plus"></i>
           </a>
           <div class="p-2 mt-3">
-            <h6 class="text-black-50">Lista de tareas</h6>
+            <h6 class="text-black-50">
+              Lista de tareas:
+              <span class="fw-bold text-primary">{{
+                this.$route.params.name
+              }}</span>
+            </h6>
             <hr />
-            <div v-if="tasks.length > 0" class="card mt-2 ">
-              <ol class="list-group list-group-numbered scroll">
-                <li
+            <div v-if="tasks.length > 0" class="mt-2 ">
+              <div class="scroll-tasks ">
+                <div
                   v-for="(task, index) in tasks"
                   :key="index"
-                  class="list-group-item"
+                  class="card mt-1 mx-2 "
                 >
-                  {{ task.name }}
-                  <!-- TODO:codigo para los estado de la tarea -->
-                  <!-- <div
-                    v-if="task.status"
-                    class="d-flex flex-row justify-content-end "
-                  >
-                    <span class=" badge bg-success float-end">
-                      Completada
-                    </span>
+                  <div class="card-body  border-start border-primary border-3">
+                    {{ task.name }}
                   </div>
-                  <div v-else>
-                    <span class=" badge bg-danger float-end">Pendiente</span>
-                  </div> -->
-                </li>
-              </ol>
+                </div>
+              </div>
             </div>
             <div v-else>
               <div class="alert alert-secondary" role="alert">
@@ -118,8 +120,8 @@
           </div>
         </div>
         <div
-          class="col-8 d-flex justify-content-center align-content-center align-self-center"
           v-else
+          class="col-8 d-flex justify-content-center align-content-center align-self-center"
         >
           <h3 class="text-black-50">Organizador de tareas</h3>
         </div>
