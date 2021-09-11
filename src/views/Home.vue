@@ -25,7 +25,7 @@
                 id="name"
                 class="form-control form-control-sm"
                 :class="error ? `is-invalid` : ``"
-                autofocus
+                autocomplete="off"
               />
               <small id="helpId" class="text-muted">Escribe la categoria</small>
 
@@ -88,15 +88,27 @@
             <h6 class="text-black-50">Lista de tareas</h6>
             <hr />
             <div v-if="tasks.length > 0" class="card mt-2 ">
-              <ul class="list-group list-group-flush scroll">
+              <ol class="list-group list-group-numbered scroll">
                 <li
                   v-for="(task, index) in tasks"
                   :key="index"
                   class="list-group-item"
                 >
                   {{ task.name }}
+                  <!-- TODO:codigo para los estado de la tarea -->
+                  <!-- <div
+                    v-if="task.status"
+                    class="d-flex flex-row justify-content-end "
+                  >
+                    <span class=" badge bg-success float-end">
+                      Completada
+                    </span>
+                  </div>
+                  <div v-else>
+                    <span class=" badge bg-danger float-end">Pendiente</span>
+                  </div> -->
                 </li>
-              </ul>
+              </ol>
             </div>
             <div v-else>
               <div class="alert alert-secondary" role="alert">
@@ -322,8 +334,6 @@ export default {
           headers: { "x-access-token": this.token },
         })
         .then((res) => {
-          console.log(res);
-          console.log(this.tasks);
           this.tasks.push(res.data.task);
           this.showModal = false;
           this.task = { name: "", priority: "" };
