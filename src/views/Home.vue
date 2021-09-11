@@ -27,6 +27,8 @@
                 :class="error ? `is-invalid` : ``"
                 autofocus
               />
+              <small id="helpId" class="text-muted">Escribe la categoria</small>
+
               <div v-show="error" id="name" class="invalid-feedback">
                 {{ error.message }}
               </div>
@@ -72,11 +74,12 @@
             >
           </div>
         </div>
-        <div class="col-8 tasks">
+        <div v-if="categoryId" class="col-8 tasks">
           <a
             class="btn btn-primary float-end mt-3 btn-sm"
             data-bs-toggle="tooltip"
             data-bs-placement="top"
+            @click="showModal = true"
             title="Agregar Tarea"
           >
             <i class="fas fa-plus"></i>
@@ -96,11 +99,87 @@
               </ul>
             </div>
             <div v-else>
-              Lista vacia.
+              <div class="alert alert-secondary" role="alert">
+                Lista vacia!
+              </div>
             </div>
           </div>
         </div>
+        <div
+          class="col-8 d-flex justify-content-center align-content-center align-self-center"
+          v-else
+        >
+          <h3 class="text-black-50">Organizador de tareas</h3>
+        </div>
       </div>
+    </div>
+    <!-- modal to add tasks -->
+
+    <div v-if="showModal">
+      <transition name="modal">
+        <div class="modal-mask">
+          <div class="modal-wrapper">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title text-black-50">Agregar tarea</h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    @click="showModal = false"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <form action="">
+                  <div class="modal-body">
+                    <div class="form-group">
+                      <input
+                        type="text"
+                        name=""
+                        v-model="task.name"
+                        class="form-control"
+                        placeholder="Escribe el nombre de la tarea"
+                        aria-describedby="helpId"
+                      />
+                    </div>
+                    <div class="form-group mt-3">
+                      <select
+                        class="form-select"
+                        v-model="task.priority"
+                        aria-label="Default select example"
+                      >
+                        <option selected disabled
+                          >Selecciona la prioridad</option
+                        >
+                        <option value="1">Alta</option>
+                        <option value="2">Media</option>
+                        <option value="3">Baja</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="modal-footer mt-4">
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary"
+                      @click="showModal = false"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      @click="createTask()"
+                      class="btn btn-success"
+                    >
+                      Guardar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -111,7 +190,7 @@ import Swal from "sweetalert2";
 export default {
   data() {
     return {
-      task: { title: "" },
+      task: { name: "", priority: "" },
       tasks: [],
       categories: [],
       category: { name: "" },
@@ -119,6 +198,8 @@ export default {
       userId: "",
       error: "",
       token: "",
+      categoryId: "",
+      showModal: false,
       editedCategory: null,
     };
   },
@@ -221,10 +302,10 @@ export default {
     },
     getTasks(category) {
       // this.tasks = [];
-      const { id: categoryId } = category;
-      console.log("esta categoriua va", categoryId);
+      const { id } = category;
+      this.categoryId = id;
       axios
-        .get(`http://localhost:3000/api/tasks/${categoryId}`, {
+        .get(`http://localhost:3000/api/tasks/${id}`, {
           headers: { "x-access-token": this.token },
         })
         .then((res) => {
@@ -234,8 +315,42 @@ export default {
           console.log(err);
         });
     },
+    createTask() {
+      const data = { ...this.task, categoryId: this.categoryId };
+      axios
+        .post(`http://localhost:3000/api/tasks`, data, {
+          headers: { "x-access-token": this.token },
+        })
+        .then((res) => {
+          console.log(res);
+          console.log(this.tasks);
+          this.tasks.push(res.data.task);
+          this.showModal = false;
+          this.task = { name: "", priority: "" };
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    },
   },
 };
 </script>
 
-<style></style>
+<style>
+.modal-mask {
+  position: fixed;
+  z-index: 9998;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: table;
+  transition: opacity 0.3s ease;
+}
+
+.modal-wrapper {
+  display: table-cell;
+  vertical-align: top;
+}
+</style>
