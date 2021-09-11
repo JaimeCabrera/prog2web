@@ -10,11 +10,11 @@
           <i class="fab fa-buffer fa-2x"></i>
           <p class="mt-1 mx-2 fw-bold">Organizador de Tareas</p>
         </router-link>
-        <div class="d-flex ">
-          <span class="mt-2 mx-3 text-primary"> {{ user.username }}</span>
-          <button class="btn btn-outline-secondary mt-1" @click="logout">
-            Cerrar Sesion
-          </button>
+        <div class="d-flex justify-content-center">
+          <span class="text-black align-self-center"> {{ user.username }}</span>
+          <a class="btn fw-bold " @click="logout">
+            Cerrar Sesion <i class="fas fa-sign-out-alt"></i>
+          </a>
         </div>
       </div>
     </nav>
@@ -83,7 +83,7 @@
         </div>
         <div v-if="categoryId" class="col-8 tasks">
           <a
-            class="btn btn-primary float-end mt-3 btn-sm"
+            class="btn btn-outline-primary float-end mt-3 btn-sm"
             data-bs-toggle="tooltip"
             data-bs-placement="top"
             @click="showModal = true"
@@ -104,10 +104,55 @@
                 <div
                   v-for="(task, index) in tasks"
                   :key="index"
-                  class="card mt-1 mx-2 "
+                  class="card border-0  mt-2 mx-2 "
                 >
-                  <div class="card-body  border-start border-primary border-3">
+                  <!-- :TODO: check properties change to status -->
+                  <!-- if task sttaus is pendind -->
+                  <div
+                    v-if="task.status == 0"
+                    class="card-body  border-start border-success border-3"
+                  >
                     {{ task.name }}
+                    <a
+                      @click.prevent="deleteTask(task)"
+                      class="float-end text-black-50 mx-3"
+                      href=""
+                      data-toggle="tooltip"
+                      data-placement="top"
+                      title="Eliminar"
+                    >
+                      <i class="fas fa-trash-alt"></i>
+                    </a>
+                    <a
+                      href=""
+                      @click.prevent="taskCompleted(task)"
+                      class="float-end text-primary"
+                      data-toggle="tooltip"
+                      data-placement="top"
+                      title="Marcar como completada"
+                    >
+                      <i class="fas fa-check"></i>
+                    </a>
+                  </div>
+                  <!-- else if task is completed -->
+                  <div
+                    v-else
+                    class="card-body  border-start border-danger border-3 text-decoration-line-throught"
+                  >
+                    <s>{{ task.name }}</s>
+                    <a
+                      @click.prevent="deleteTask(task)"
+                      class="float-end text-black-50 mx-3"
+                      href=""
+                      data-toggle="tooltip"
+                      data-placement="top"
+                      title="Eliminar"
+                    >
+                      <i class="fas fa-trash-alt"></i>
+                    </a>
+                    <!-- <a class="float-end text-success" href="">
+                      <i class="fas fa-check-double"></i>
+                    </a> -->
                   </div>
                 </div>
               </div>
@@ -291,7 +336,7 @@ export default {
           this.error = err.response.data;
         });
     },
-
+    // FIXME: check change route to delete category
     deleteCategory(category) {
       const { id } = category;
       axios
@@ -339,6 +384,65 @@ export default {
           this.tasks.push(res.data.task);
           this.showModal = false;
           this.task = { name: "", priority: "" };
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    },
+    taskCompleted(task) {
+      // const { id: taskId } = task;
+      const data = { id: task.id, status: task.status };
+      axios
+        .put("http://localhost:3000/api/tasks/task", data, {
+          headers: { "x-access-token": this.token },
+        })
+        .then((res) => {
+          if (res.status == 200) {
+            Swal.fire({
+              position: "bottom-end",
+              icon: "success",
+              title: `${res.data.message}`,
+              showConfirmButton: false,
+              timer: 1500,
+            });
+            this.tasks = this.tasks.map((item) => {
+              if (item.id === task.id) {
+                return { ...item, status: 1 };
+              }
+              return item;
+            });
+          } else {
+            Swal.fire({
+              position: "bottom-end",
+              icon: "error",
+              title: `${res.data.message}`,
+              showConfirmButton: false,
+              timer: 1500,
+            });
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      // update tasks.status
+    },
+    deleteTask(task) {
+      const { id } = task;
+      axios
+        .delete(`http://localhost:3000/api/tasks/${id}`, {
+          headers: { "x-access-token": this.token },
+        })
+        .then((res) => {
+          if (res.status == 200) {
+            Swal.fire({
+              position: "bottom-end",
+              icon: "success",
+              title: `${res.data.message}`,
+              showConfirmButton: false,
+              timer: 1500,
+            });
+            this.tasks = this.tasks.filter((task) => task.id !== id);
+          }
         })
         .catch((err) => {
           console.log(err);
