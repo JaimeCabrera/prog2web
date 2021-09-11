@@ -49,6 +49,7 @@
 
 <script>
 import axios from "axios";
+import Swal from "sweetalert2";
 export default {
   data() {
     return {
@@ -56,7 +57,32 @@ export default {
       error: "",
     };
   },
+  mounted() {
+    this.verifyAuth();
+  },
   methods: {
+    verifyAuth() {
+      axios
+        .get("http://localhost:3000/api/auth/user", {
+          headers: { "x-access-token": localStorage.getItem("token") },
+        })
+        .then(() => {
+          Swal.fire({
+            position: "center",
+            icon: "success",
+            title: "Usuario autenticado, cierra sesion para cambiar de cuenta",
+            showConfirmButton: true,
+            // timer: 1500,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.$router.replace("/home");
+            }
+          });
+        })
+        .catch(() => {
+          // this.$router.push("/");
+        });
+    },
     handleLogin() {
       this.error = "";
       axios

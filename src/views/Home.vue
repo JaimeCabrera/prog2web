@@ -5,13 +5,13 @@
         <router-link
           to="/home"
           @click.native="categoryId = ''"
-          class="navbar-brand d-flex  text-center text-primary"
+          class="navbar-brand d-flex  text-center text-black-50"
         >
           <i class="fab fa-buffer fa-2x"></i>
-          <p class="mt-1 mx-2 fw-bold">Organizador de Tareas</p>
+          <p class="mt-1 mx-2 ">Organizador de Tareas</p>
         </router-link>
         <div class="d-flex justify-content-center">
-          <span class="text-black align-self-center"> {{ user.username }}</span>
+          <span class="text-black align-self-center"> {{ user.email }}</span>
           <a class="btn fw-bold " @click="logout">
             Cerrar Sesion <i class="fas fa-sign-out-alt"></i>
           </a>
@@ -113,6 +113,10 @@
                     class="card-body  border-start border-success border-3"
                   >
                     {{ task.name }}
+                    <!-- <span class="float-end"
+                      >Creado hace:{{ task.createdAt }}</span
+                    > -->
+
                     <a
                       @click.prevent="deleteTask(task)"
                       class="float-end text-black-50 mx-3"
@@ -132,6 +136,16 @@
                       title="Marcar como completada"
                     >
                       <i class="fas fa-check"></i>
+                    </a>
+                    <a
+                      href=""
+                      @click.prevent="editTask(task)"
+                      class="float-end text-success mx-3"
+                      data-toggle="tooltip"
+                      data-placement="top"
+                      title="Editar Tarea"
+                    >
+                      <i class="fas fa-edit"></i>
                     </a>
                   </div>
                   <!-- else if task is completed -->
@@ -181,12 +195,35 @@
             <div class="modal-dialog" role="document">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h5 class="modal-title text-black-50">Agregar tarea</h5>
+                  <h5 v-if="edit" class="modal-title text-black-50">
+                    Editando la tarea {{ task.name }}
+                  </h5>
+                  <h5 class="modal-title text-black-50" v-else>
+                    Agregar Tarea
+                  </h5>
                   <button
+                    v-if="edit"
                     type="button"
                     class="btn-close"
                     data-bs-dismiss="modal"
-                    @click="showModal = false"
+                    @click="
+                      () => {
+                        showModal = false;
+                        edit = false;
+                      }
+                    "
+                    aria-label="Close"
+                  ></button>
+                  <button
+                    v-else
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    @click="
+                      () => {
+                        showModal = false;
+                      }
+                    "
                     aria-label="Close"
                   ></button>
                 </div>
@@ -218,20 +255,40 @@
                     </div>
                   </div>
                   <div class="modal-footer mt-4">
-                    <button
-                      type="button"
-                      class="btn btn-outline-secondary"
-                      @click="showModal = false"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="button"
-                      @click="createTask()"
-                      class="btn btn-success"
-                    >
-                      Guardar
-                    </button>
+                    <!-- if click edit task -->
+                    <div v-if="edit">
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary mx-3"
+                        @click="cancelEdit"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        @click="updateTask"
+                        class="btn btn-primary"
+                      >
+                        Guardar Cambios
+                      </button>
+                    </div>
+                    <!-- else click on new task -->
+                    <div v-else>
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary mx-3"
+                        @click="showModal = false"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        @click="createTask()"
+                        class="btn btn-success"
+                      >
+                        Agregar Tarea
+                      </button>
+                    </div>
                   </div>
                 </form>
               </div>
@@ -259,6 +316,7 @@ export default {
       token: "",
       categoryId: "",
       showModal: false,
+      edit: false,
       editedCategory: null,
     };
   },
@@ -314,6 +372,7 @@ export default {
     },
     addCategory() {
       this.error = "";
+      this.edit = false;
       axios
         .post("http://localhost:3000/api/categories", this.category, {
           headers: { "x-access-token": this.token },
@@ -383,10 +442,30 @@ export default {
         .then((res) => {
           this.tasks.push(res.data.task);
           this.showModal = false;
-          this.task = { name: "", priority: "" };
+          this.task = { name: "", priority: "", id: "" };
         })
         .catch((err) => {
           console.log(err);
+        });
+    },
+    updateTask() {
+      const data = this.task;
+      axios
+        .put(`http://localhost:3000/api/tasks/${this.task.id}`, data, {
+          headers: { "x-access-token": this.token },
+        })
+        .then((res) => {
+          if (res.status == 200) {
+            this.tasks = this.tasks.map((item) => {
+              if (item.id === this.task.id) {
+                return this.task;
+              }
+              return item;
+            });
+            this.task = { name: "", priority: "", id: "" };
+            this.edit = false;
+            this.showModal = false;
+          }
         });
     },
     taskCompleted(task) {
@@ -447,6 +526,15 @@ export default {
         .catch((err) => {
           console.log(err);
         });
+    },
+    editTask(task) {
+      this.showModal = true;
+      this.edit = true;
+      this.task = task;
+    },
+    cancelEdit() {
+      this.showModal = false;
+      this.task = { name: "", priority: "" };
     },
   },
 };
