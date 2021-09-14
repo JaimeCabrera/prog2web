@@ -65,7 +65,15 @@
               :key="index"
               @click.native="getTasks(category)"
               class="list-group-item list-group-item-action"
-              >{{ category.name }}
+            >
+              <button
+                type=""
+                class="btn  p-0 mx-2"
+                @click="shareTasks(category.id)"
+              >
+                <i class="fas fa-share-alt"></i>
+              </button>
+              {{ category.name }}
               <button
                 type="button"
                 class="btn-close float-end text-black-50"
@@ -110,7 +118,14 @@
                   <!-- if task sttaus is pendind -->
                   <div
                     v-if="task.status == 0"
-                    class="card-body  border-start border-success border-3"
+                    class="card-body   text-black"
+                    v-bind:class="
+                      task.priority == 1
+                        ? ' border-bottom border-danger border-2'
+                        : task.priority == 2
+                        ? ' border-bottom border-warning border-2'
+                        : ' border-bottom border-success border-2'
+                    "
                   >
                     {{ task.name }}
                     <!-- <span class="float-end"
@@ -151,7 +166,7 @@
                   <!-- else if task is completed -->
                   <div
                     v-else
-                    class="card-body  border-start border-danger border-3 text-decoration-line-throught"
+                    class="card-body  border-bottom border-secondary text-black-50 text-decoration-line-throught"
                   >
                     <s>{{ task.name }}</s>
                     <a
@@ -326,9 +341,11 @@ export default {
   },
   mounted() {},
   methods: {
+    // get token from localstorage to use on request
     getToken() {
       return (this.token = localStorage.getItem("token"));
     },
+    // veriffy if user is auth or token is valid
     verifyAuth() {
       axios
         .get("http://localhost:3000/api/auth/user", {
@@ -338,10 +355,6 @@ export default {
           this.user = res.data;
           this.userId = res.data.id;
           this.getAllCategories(this.userId);
-
-          // if (!res) {
-          //   this.$router.replace("/");
-          // }
         })
         .catch((err) => {
           console.log(err);
@@ -349,12 +362,13 @@ export default {
           this.$router.replace("/");
         });
     },
+    // clear token from localstorage
     logout() {
       localStorage.clear();
       this.$router.replace("/");
     },
+    // obtain all categories by user:{id}
     getAllCategories(id) {
-      // const userId = this.user.id;
       axios
         .get(
           "http://localhost:3000/api/categories",
@@ -370,6 +384,30 @@ export default {
           this.categories = res.data;
         });
     },
+    // share tasks with a clicked category
+    shareTasks(id) {
+      console.log("compartir", id);
+      Swal.fire({
+        title: "Esta seguro de enviar al correo las lista de tareas?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Si, enviar!",
+        cancelButtonText: "Cancelar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire(
+            "Compartido!",
+            "La lista de tareas fue enviada al correo.",
+            "success"
+          );
+        }
+      });
+      // const { tasks } = this.getTasks(id);
+      // console.log(tasks);
+    },
+    // method to add new category
     addCategory() {
       this.error = "";
       this.edit = false;
@@ -395,7 +433,7 @@ export default {
           this.error = err.response.data;
         });
     },
-    // FIXME: check change route to delete category
+    // FIXME: check if have tasks and delete change route to delete category
     deleteCategory(category) {
       const { id } = category;
       axios
@@ -419,7 +457,6 @@ export default {
         });
     },
     getTasks(category) {
-      // this.tasks = [];
       const { id } = category;
       this.categoryId = id;
       axios
@@ -534,6 +571,7 @@ export default {
     },
     cancelEdit() {
       this.showModal = false;
+      this.edit = false;
       this.task = { name: "", priority: "" };
     },
   },
