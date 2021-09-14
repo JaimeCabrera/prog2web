@@ -67,8 +67,8 @@
               class="list-group-item list-group-item-action"
             >
               <button
-                type=""
-                class="btn  p-0 mx-2"
+                type="button"
+                class="btn p-0 mx-3 "
                 @click="shareTasks(category.id)"
               >
                 <i class="fas fa-share-alt"></i>
@@ -128,10 +128,6 @@
                     "
                   >
                     {{ task.name }}
-                    <!-- <span class="float-end"
-                      >Creado hace:{{ task.createdAt }}</span
-                    > -->
-
                     <a
                       @click.prevent="deleteTask(task)"
                       class="float-end text-black-50 mx-3"
@@ -258,10 +254,11 @@
                       <select
                         class="form-select"
                         v-model="task.priority"
-                        aria-label="Default select example"
+                        aria-label="Default select"
                       >
-                        <option selected disabled
-                          >Selecciona la prioridad</option
+                        <!-- <option disabled>Selecciona la prioridad</option> -->
+                        <option disabled value=""
+                          >Seleccione la prioridad de la tarea</option
                         >
                         <option value="1">Alta</option>
                         <option value="2">Media</option>
@@ -333,6 +330,7 @@ export default {
       showModal: false,
       edit: false,
       editedCategory: null,
+      tasksShared: [],
     };
   },
   created() {
@@ -352,7 +350,7 @@ export default {
           headers: { "x-access-token": localStorage.getItem("token") },
         })
         .then((res) => {
-          this.user = res.data;
+          this.user = res.data.user;
           this.userId = res.data.id;
           this.getAllCategories(this.userId);
         })
@@ -387,25 +385,68 @@ export default {
     // share tasks with a clicked category
     shareTasks(id) {
       console.log("compartir", id);
-      Swal.fire({
-        title: "Esta seguro de enviar al correo las lista de tareas?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Si, enviar!",
-        cancelButtonText: "Cancelar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          Swal.fire(
-            "Compartido!",
-            "La lista de tareas fue enviada al correo.",
-            "success"
-          );
-        }
-      });
-      // const { tasks } = this.getTasks(id);
-      // console.log(tasks);
+      // this.tasksShared = [];
+      axios
+        .get(`http://localhost:3000/api/tasks/${id}`, {
+          headers: { "x-access-token": this.token },
+        })
+        .then((res) => {
+          this.tasksShared = res.data.tasks;
+          if (this.tasksShared.length === 0) {
+            Swal.fire({
+              position: "center",
+              icon: "error",
+              title: "No existen tareas, no se puede compartir",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+          } else {
+            Swal.fire({
+              html: "Escriba el correo electronico, para compartir las tareas.",
+              input: "email",
+              inputAttributes: {
+                autocapitalize: "off",
+              },
+              showCancelButton: true,
+              confirmButtonText: "Compatir",
+              showLoaderOnConfirm: true,
+            }).then((result) => {
+              if (result.value) {
+                console.log(this.user);
+                console.log(this.tasksShared);
+                const data = {
+                  email: result.value,
+                  username: this.user.username,
+                  userEmail: this.user.email,
+                  tasks: this.tasksShared,
+                };
+                // :TODO:aca la peticon al back para el envio del correo
+                axios
+                  .post("http://localhost:3000/api/email", data, {
+                    headers: { "x-access-token": this.token },
+                  })
+                  .then((res) => {
+                    if (res.data.ok == true) {
+                      Swal.fire({
+                        position: "bottom-end",
+                        icon: "success",
+                        title: `${res.data.message}`,
+                        showConfirmButton: false,
+                        timer: 1500,
+                      });
+                    }
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                  });
+              }
+            });
+          }
+          console.log(this.tasksShared.length);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     },
     // method to add new category
     addCategory() {
