@@ -50,7 +50,7 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
-const API_URL = process.env.VUE_APP_API_URL;
+const API_URL = "https://apiprog2.herokuapp.com";
 export default {
   data() {
     return {
