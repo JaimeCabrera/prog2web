@@ -8,7 +8,6 @@ export default {
   created() {
     document.title = "Organizador de Tareas";
   },
-  mounted: {},
 };
 </script>
 
