@@ -50,6 +50,7 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
+const API_URL = process.env.VUE_APP_API_URL;
 export default {
   data() {
     return {
@@ -63,19 +64,20 @@ export default {
   methods: {
     verifyAuth() {
       axios
-        .get("http://localhost:3000/api/auth/user", {
+        .get(`${API_URL}/api/auth/user`, {
           headers: { "x-access-token": localStorage.getItem("token") },
         })
         .then(() => {
           Swal.fire({
             position: "center",
             icon: "success",
-            title: "Usuario autenticado, cierra sesion para cambiar de cuenta",
+            title: "Usuario incorrecto, inicia sesion ",
             showConfirmButton: true,
             // timer: 1500,
           }).then((result) => {
             if (result.isConfirmed) {
-              this.$router.replace("/home");
+              localStorage.clear();
+              this.$router.replace("/");
             }
           });
         })
@@ -86,7 +88,7 @@ export default {
     handleLogin() {
       this.error = "";
       axios
-        .post("http://localhost:3000/api/auth/signin", this.user)
+        .post(`${API_URL}/api/auth/signin`, this.user)
         .then((res) => {
           if (res.status == 200) {
             localStorage.setItem("token", res.data.accessToken);

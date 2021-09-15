@@ -315,6 +315,9 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
+// const API_URL = "https://apiprog2.herokuapp.com";
+const API_URL = process.env.VUE_APP_API_URL;
+
 export default {
   data() {
     return {
@@ -346,7 +349,7 @@ export default {
     // veriffy if user is auth or token is valid
     verifyAuth() {
       axios
-        .get("http://localhost:3000/api/auth/user", {
+        .get(`${API_URL}/api/auth/user`, {
           headers: { "x-access-token": localStorage.getItem("token") },
         })
         .then((res) => {
@@ -369,7 +372,7 @@ export default {
     getAllCategories(id) {
       axios
         .get(
-          "http://localhost:3000/api/categories",
+          `${API_URL}/api/categories`,
 
           {
             data: {
@@ -387,7 +390,7 @@ export default {
       console.log("compartir", id);
       // this.tasksShared = [];
       axios
-        .get(`http://localhost:3000/api/tasks/${id}`, {
+        .get(`${API_URL}/api/tasks/${id}`, {
           headers: { "x-access-token": this.token },
         })
         .then((res) => {
@@ -422,7 +425,7 @@ export default {
                 };
                 // :TODO:aca la peticon al back para el envio del correo
                 axios
-                  .post("http://localhost:3000/api/email", data, {
+                  .post(`${API_URL}/api/email`, data, {
                     headers: { "x-access-token": this.token },
                   })
                   .then((res) => {
@@ -453,7 +456,7 @@ export default {
       this.error = "";
       this.edit = false;
       axios
-        .post("http://localhost:3000/api/categories", this.category, {
+        .post(`${API_URL}/api/categories`, this.category, {
           headers: { "x-access-token": this.token },
           data: {
             userId: this.userId,
@@ -478,7 +481,7 @@ export default {
     deleteCategory(category) {
       const { id } = category;
       axios
-        .delete(`http://localhost:3000/api/categories/${id}`, {
+        .delete(`${API_URL}/api/categories/${id}`, {
           headers: { "x-access-token": this.token },
         })
         .then((res) => {
@@ -501,7 +504,7 @@ export default {
       const { id } = category;
       this.categoryId = id;
       axios
-        .get(`http://localhost:3000/api/tasks/${id}`, {
+        .get(`${API_URL}/api/tasks/${id}`, {
           headers: { "x-access-token": this.token },
         })
         .then((res) => {
@@ -514,13 +517,20 @@ export default {
     createTask() {
       const data = { ...this.task, categoryId: this.categoryId };
       axios
-        .post(`http://localhost:3000/api/tasks`, data, {
+        .post(`${API_URL}/api/tasks`, data, {
           headers: { "x-access-token": this.token },
         })
         .then((res) => {
           this.tasks.push(res.data.task);
           this.showModal = false;
           this.task = { name: "", priority: "", id: "" };
+          Swal.fire({
+            position: "bottom-end",
+            icon: "success",
+            title: "Tarea creada",
+            showConfirmButton: false,
+            timer: 1500,
+          });
         })
         .catch((err) => {
           console.log(err);
@@ -529,13 +539,20 @@ export default {
     updateTask() {
       const data = this.task;
       axios
-        .put(`http://localhost:3000/api/tasks/${this.task.id}`, data, {
+        .put(`${API_URL}/api/tasks/${this.task.id}`, data, {
           headers: { "x-access-token": this.token },
         })
         .then((res) => {
           if (res.status == 200) {
             this.tasks = this.tasks.map((item) => {
               if (item.id === this.task.id) {
+                Swal.fire({
+                  position: "bottom-end",
+                  icon: "success",
+                  title: "Tarea Editada correctamente",
+                  showConfirmButton: false,
+                  timer: 1500,
+                });
                 return this.task;
               }
               return item;
@@ -550,7 +567,7 @@ export default {
       // const { id: taskId } = task;
       const data = { id: task.id, status: task.status };
       axios
-        .put("http://localhost:3000/api/tasks/task", data, {
+        .put(`${API_URL}/api/tasks/task`, data, {
           headers: { "x-access-token": this.token },
         })
         .then((res) => {
@@ -586,7 +603,7 @@ export default {
     deleteTask(task) {
       const { id } = task;
       axios
-        .delete(`http://localhost:3000/api/tasks/${id}`, {
+        .delete(`${API_URL}/api/tasks/${id}`, {
           headers: { "x-access-token": this.token },
         })
         .then((res) => {

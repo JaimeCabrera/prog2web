@@ -58,6 +58,7 @@
 
 <script>
 import axios from "axios";
+const API_URL = "https://apiprog2.herokuapp.com";
 export default {
   data() {
     return {
@@ -69,7 +70,7 @@ export default {
     addUser() {
       this.error = "";
       axios
-        .post("http://localhost:3000/api/auth/signup", this.user)
+        .post(`${API_URL}/api/auth/signup`, this.user)
         .then((res) => {
           if (res.status == 200) {
             this.$router.push("/");
