@@ -6,7 +6,7 @@ import "@fortawesome/fontawesome-free/css/all.css";
 // import "@fortawesome/fontawesome-free/js/all.js";
 import "bootstrap/dist/css/bootstrap.css";
 
-// Vue.config.productionTip = false;
+Vue.config.productionTip = false;
 new Vue({
   router,
   render: (h) => h(App),
