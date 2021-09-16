@@ -315,8 +315,8 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
-const API_URL = "https://apiprog2.herokuapp.com";
-// const API_URL = process.env.VUE_APP_API_URL;
+// const API_URL = "https://apiprog2.herokuapp.com";
+const API_URL = "http://localhost:3000";
 
 export default {
   data() {
@@ -497,7 +497,13 @@ export default {
           }
         })
         .catch((err) => {
-          console.log(err);
+          Swal.fire({
+            position: "center",
+            icon: "error",
+            title: `${err.response.data.message}`,
+            showConfirmButton: false,
+            timer: 1800,
+          });
         });
     },
     getTasks(category) {

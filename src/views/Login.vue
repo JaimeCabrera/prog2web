@@ -50,7 +50,9 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
-const API_URL = "https://apiprog2.herokuapp.com";
+// const API_URL = "https://apiprog2.herokuapp.com";
+const API_URL = "http://localhost:3000";
+console.log(API_URL);
 export default {
   data() {
     return {

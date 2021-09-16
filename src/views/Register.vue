@@ -58,7 +58,9 @@
 
 <script>
 import axios from "axios";
-const API_URL = "https://apiprog2.herokuapp.com";
+// const API_URL = "https://apiprog2.herokuapp.com";
+const API_URL = "http://localhost:3000";
+
 export default {
   data() {
     return {
