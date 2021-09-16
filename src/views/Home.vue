@@ -21,8 +21,39 @@
     <div class="container">
       <div class="row shadow-sm mt-3">
         <div class="col-4  categories d-flex flex-column">
-          <form class="mt-3" @submit.prevent="addCategory">
-            <div class="">
+          <div v-if="editCat">
+            <form class="mt-3" @submit.prevent="editCategory">
+              <!-- si se presiona editar categoria se renderiza esta parte -->
+              <input
+                type="text"
+                v-model="category.name"
+                id="name"
+                class="form-control form-control-sm"
+                :class="error ? `is-invalid` : ``"
+                autocomplete="off"
+                autofocus
+              />
+              <small id="helpId" class="text-muted"
+                >Escriba en nuevo nombre de la categoria</small
+              >
+
+              <div v-show="error" id="name" class="invalid-feedback">
+                {{ error.message }}
+              </div>
+              <button type="submit" class="btn btn-primary mt-2  btn-sm">
+                Guardar Cambios
+              </button>
+              <button
+                @click="cancelEditCategory"
+                class="btn btn-outline-danger  mt-2 btn-sm mx-3"
+              >
+                Cancelar
+              </button>
+            </form>
+          </div>
+          <!-- caso contario se renderissa por defecto el agregar categoria -->
+          <div v-else>
+            <form class="mt-3" @submit.prevent="addCategory">
               <input
                 type="text"
                 v-model="category.name"
@@ -36,20 +67,18 @@
               <div v-show="error" id="name" class="invalid-feedback">
                 {{ error.message }}
               </div>
-              <!-- <button class="btn btn-primary" type="submit" id="button-addon1">
-                Agregar Tarea
-              </button> -->
-            </div>
-            <button
-              type="submit"
-              class="btn btn-secondary mx-auto mt-2 btn-sm"
-              data-bs-toggle="tooltip"
-              data-bs-placement="top"
-              title="Agregar Categoria"
-            >
-              <i class="fas fa-plus"></i>
-            </button>
-          </form>
+              <br />
+              <button
+                type="submit"
+                class="btn btn-secondary mx-auto mt-2 btn-sm"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Agregar Categoria"
+              >
+                <i class="fas fa-plus"></i>
+              </button>
+            </form>
+          </div>
           <br />
           <h6 class="mx-2 text-success">Categorias</h6>
           <div
@@ -74,6 +103,7 @@
                 <i class="fas fa-share-alt"></i>
               </button>
               {{ category.name }}
+
               <button
                 type="button"
                 class="btn-close float-end text-black-50"
@@ -81,6 +111,15 @@
                 @click="deleteCategory(category)"
                 title="Eliminar Categoria"
               ></button>
+              <button
+                @click.prevent="showEditCategory(category)"
+                class="btn btn-sm float-end text-black-50 mx-4"
+                data-toggle="tooltip"
+                data-placement="top"
+                title="Editar la Categoria"
+              >
+                <i class="fas fa-pencil-alt"></i>
+              </button>
             </router-link>
           </div>
           <div v-else>
@@ -240,6 +279,13 @@
                 </div>
                 <form action="">
                   <div class="modal-body">
+                    <div
+                      class="alert alert-danger"
+                      role="alert"
+                      v-if="errorAddTask"
+                    >
+                      {{ errorAddTask.message }}
+                    </div>
                     <div class="form-group">
                       <input
                         type="text"
@@ -328,10 +374,12 @@ export default {
       user: {},
       userId: "",
       error: "",
+      errorAddTask: "",
       token: "",
       categoryId: "",
       showModal: false,
       edit: false,
+      editCat: false,
       editedCategory: null,
       tasksShared: [],
     };
@@ -385,6 +433,33 @@ export default {
           this.categories = res.data;
         });
     },
+    editCategory() {
+      const data = { categoryId: this.categoryId, name: this.category.name };
+      axios
+        .put(`${API_URL}/api/categories/category/`, data, {
+          headers: { "x-access-token": this.token },
+        })
+        .then((res) => {
+          if (res.status === 200) {
+            this.categories = this.categories.map((item) => {
+              if (item.id === this.category.id) {
+                Swal.fire({
+                  position: "bottom-end",
+                  icon: "success",
+                  title: "Categoria Editada correctamente",
+                  showConfirmButton: false,
+                  timer: 1500,
+                });
+                return this.category;
+              }
+              return item;
+            });
+            this.editCat = false;
+            this.category = { name: "" };
+          }
+        });
+    },
+
     // share tasks with a clicked category
     shareTasks(id) {
       console.log("compartir", id);
@@ -539,6 +614,8 @@ export default {
           });
         })
         .catch((err) => {
+          this.errorAddTask = err.response.data;
+
           console.log(err);
         });
     },
@@ -637,6 +714,14 @@ export default {
       this.showModal = false;
       this.edit = false;
       this.task = { name: "", priority: "" };
+    },
+    showEditCategory(category) {
+      this.editCat = true;
+      this.categoryId = category.id;
+      this.category = category;
+    },
+    cancelEditCategory() {
+      (this.editCat = false), (this.category = { name: "" });
     },
   },
 };
